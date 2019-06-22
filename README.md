@@ -1,15 +1,20 @@
 # Multiple bluebird instrumentation calls
 
 ## Issue description
-From instana >=1.65.0, the package started [registering a require hook](https://github.com/instana/nodejs-sensor/blob/master/packages/core/src/tracing/instrumentation/control_flow/bluebird.js#L18) which is currently used to ensure all bluebird versions get patched properly by using [cls-bluebird](https://github.com/TimBeyer/cls-bluebird/blob/master/lib/index.js#L16).
+From instana >= 1.65.0, you cannot longer use [cls-bluebird](https://github.com/TimBeyer/cls-bluebird) to instrument (the currently require-able) version of bluebird with any cls namespace if the instana sensor was required before the instrumentation process.
 
-The [cls-bluebird](https://github.com/TimBeyer/cls-bluebird/blob/master/lib/index.js#L16) package can instrument the currently installed bluebird version, if consumers decide not to specify the bluebird instance to patch.
+## Possible cause
+The following features, when combined are causing the issue:
 
-When both features are combined, (I think) the following happens:
+1. From instana >=1.65.0, the package started [registering a require hook](https://github.com/instana/nodejs-sensor/blob/master/packages/core/src/tracing/instrumentation/control_flow/bluebird.js#L18) which is currently used to ensure all bluebird versions get patched properly by using [cls-bluebird](https://github.com/TimBeyer/cls-bluebird).
+
+2. The [cls-bluebird](https://github.com/TimBeyer/cls-bluebird) package is used to instrument the currently require-able bluebird version (by not specifying the bluebird instance to patch) with any cls namespace.
+
+When developers combine both features, (I think) the following happens:
 
 1. Instana registers a require hook, intercepting all requires to bluebird.
-2. Consumers try to instrument bluebird with a cls namespace without specifying a bluebird instance
-3. cls-bluebird tries to require bluebird to instrument it
+2. Developers try to instrument bluebird with a cls namespace without specifying a bluebird instance
+3. cls-bluebird [tries to require](https://github.com/TimBeyer/cls-bluebird/blob/master/lib/index.js#L15) bluebird to instrument it
 4. Since the require hook is already registered, it will intercept the bluebird require call
 5. Instana require hook will try to instrument the intercepted bluebird call by calling cls-bluebird again (this time with the intercepted bluebird instance)
 6. We have now a recusive call to cls-bluebird. As described by the [Node.js modules Cycle](https://nodejs.org/dist/latest-v10.x/docs/api/modules.html#modules_cycles) documentation, Node.js deals with this scenario by providing a temporal incomplete export value (an empty object in this case) to the module causing the cycle call. 
