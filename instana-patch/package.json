@@ -1,0 +1,16 @@
+{
+  "name": "instana-patch",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@instana/collector": "github:jonathansamines/nodejs-sensor#instana-collector-v1.68.3-gitpkg",
+    "bluebird": "^3.5.5"
+  }
+}
