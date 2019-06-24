@@ -47,6 +47,8 @@ TypeError: require(...) is not a function
 ## Suggested solution
 Require the cls-bluebird module, before the instana require hook is registered. By doing that, we avoid the recursive call
 
+## Alternate solution
+The dynamic require nature of the current approach, allows to only load cls-bluebird into memory when bluebird is involved. As an alternative, the code could also be updated to only call **cls-bluebird** if it is a function.
 
 ## Instana 1.68.x
 Current instana sensor published to the npm publish registry:
